@@ -24,19 +24,19 @@ fn load_spec(
 	id: &str,
 	para_id: ParaId,
 ) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
-	Ok(match id {
-		// "" | "mathchain-pc1" => Ok(Box::new(chain_spec::ChainSpec::from_json_bytes(
-		// 	&include_bytes!("../res/mathchain-pc1.json")[..],
-		// )?)),
-		"mathchain-pc1-genesis" => Box::new(chain_spec::mathchain_pc1_build_spec_config_of(
+	match id {
+		"" | "mathchain-pc1" => Ok(Box::new(chain_spec::ChainSpec::from_json_bytes(
+			&include_bytes!("../res/mathchain-pc1.json")[..],
+		)?)),
+		"mathchain-pc1-genesis" => Ok(Box::new(chain_spec::mathchain_pc1_build_spec_config_of(
 			para_id,
-		)),
-		"dev" => Box::new(chain_spec::development_config(para_id)),
-		"" | "local" => Box::new(chain_spec::local_testnet_config(para_id)),
-		path => Box::new(chain_spec::ChainSpec::from_json_file(
-			std::path::PathBuf::from(path),
-		)?),
-	})
+		))),
+		"dev" => Ok(Box::new(chain_spec::development_config(para_id))),
+		"" | "local" => Ok(Box::new(chain_spec::local_testnet_config(para_id))),
+		path => Ok(Box::new(chain_spec::ChainSpec::from_json_file(
+			path.into(),
+		)?)),
+	}
 }
 
 impl SubstrateCli for Cli {
@@ -279,7 +279,6 @@ pub fn run() -> Result<()> {
 					config.telemetry_handle.clone(),
 				)
 				.map_err(|err| format!("Relay chain argument error: {}", err))?;
-
 				let collator = cli.run.base.validator || cli.collator;
 
 				info!("Parachain id: {:?}", id);
@@ -422,5 +421,4 @@ impl CliConfiguration<Self> for RelayChainCli {
 	) -> Result<Option<sc_telemetry::TelemetryEndpoints>> {
 		self.base.base.telemetry_endpoints(chain_spec)
 	}
-
 }

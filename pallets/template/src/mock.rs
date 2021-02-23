@@ -16,7 +16,7 @@ impl_outer_origin! {
 pub struct Test;
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
-	pub const SS58Prefix: u8 = 42;
+	pub const SS58Prefix: u8 = 39;
 }
 
 impl system::Config for Test {

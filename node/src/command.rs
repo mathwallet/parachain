@@ -3,13 +3,14 @@ use crate::{
 	cli::{Cli, RelayChainCli, Subcommand},
 };
 use codec::Encode;
-use cumulus_primitives::{genesis::generate_genesis_block, ParaId};
+use cumulus_primitives_core::ParaId;
+use cumulus_client_service::genesis::generate_genesis_block;
 use log::info;
-use parachain_runtime::Block;
+use mathchain_runtime::Block;
 use polkadot_parachain::primitives::AccountIdConversion;
 use sc_cli::{
-	ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams,
-	KeystoreParams, NetworkParams, Result, RuntimeVersion, SharedParams, SubstrateCli,
+	ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams, KeystoreParams,
+	NetworkParams, Result, RuntimeVersion, SharedParams, SubstrateCli,
 };
 use sc_service::{
 	config::{BasePath, PrometheusConfig},
@@ -24,6 +25,12 @@ fn load_spec(
 	para_id: ParaId,
 ) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
 	Ok(match id {
+		// "" | "mathchain-pc1" => Ok(Box::new(chain_spec::ChainSpec::from_json_bytes(
+		// 	&include_bytes!("../res/mathchain-pc1.json")[..],
+		// )?)),
+		"mathchain-pc1-genesis" => Box::new(chain_spec::mathchain_pc1_build_spec_config_of(
+			para_id,
+		)),
 		"dev" => Box::new(chain_spec::development_config(para_id)),
 		"" | "local" => Box::new(chain_spec::local_testnet_config(para_id)),
 		path => Box::new(chain_spec::ChainSpec::from_json_file(
@@ -34,7 +41,7 @@ fn load_spec(
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
-		"Parachain Collator Template".into()
+		"MathChain PC1".into()
 	}
 
 	fn impl_version() -> String {
@@ -43,7 +50,7 @@ impl SubstrateCli for Cli {
 
 	fn description() -> String {
 		format!(
-			"Parachain Collator Template\n\nThe command-line arguments provided first will be \
+			"MathChain PC1\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relaychain node.\n\n\
 		{} [parachain-args] -- [relaychain-args]",
@@ -56,7 +63,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn support_url() -> String {
-		"https://github.com/substrate-developer-hub/substrate-parachain-template/issues/new".into()
+		"https://github.com/darwinia-network/parachain/issues/new".into()
 	}
 
 	fn copyright_start_year() -> i32 {
@@ -68,13 +75,13 @@ impl SubstrateCli for Cli {
 	}
 
 	fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		&parachain_runtime::VERSION
+		&mathchain_runtime::VERSION
 	}
 }
 
 impl SubstrateCli for RelayChainCli {
 	fn impl_name() -> String {
-		"Parachain Collator Template".into()
+		"MathChain PC1".into()
 	}
 
 	fn impl_version() -> String {
@@ -82,7 +89,7 @@ impl SubstrateCli for RelayChainCli {
 	}
 
 	fn description() -> String {
-		"Parachain Collator Template\n\nThe command-line arguments provided first will be \
+		"MathChain PC1\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relaychain node.\n\n\
 		rococo-collator [parachain-args] -- [relaychain-args]"
@@ -94,7 +101,7 @@ impl SubstrateCli for RelayChainCli {
 	}
 
 	fn support_url() -> String {
-		"https://github.com/substrate-developer-hub/substrate-parachain-template/issues/new".into()
+		"https://github.com/darwinia-network/parachain/issues/new".into()
 	}
 
 	fn copyright_start_year() -> i32 {
@@ -192,7 +199,7 @@ pub fn run() -> Result<()> {
 			})
 		}
 		Some(Subcommand::ExportGenesisState(params)) => {
-			let mut builder = sc_cli::GlobalLoggerBuilder::new("");
+			let mut builder = sc_cli::LoggerBuilder::new("");
 			builder.with_profiling(sc_tracing::TracingReceiver::Log, "");
 			let _ = builder.init();
 
@@ -216,7 +223,7 @@ pub fn run() -> Result<()> {
 			Ok(())
 		}
 		Some(Subcommand::ExportGenesisWasm(params)) => {
-			let mut builder = sc_cli::GlobalLoggerBuilder::new("");
+			let mut builder = sc_cli::LoggerBuilder::new("");
 			builder.with_profiling(sc_tracing::TracingReceiver::Log, "");
 			let _ = builder.init();
 
@@ -266,11 +273,13 @@ pub fn run() -> Result<()> {
 
 				let task_executor = config.task_executor.clone();
 				let polkadot_config = SubstrateCli::create_configuration(
-						&polkadot_cli,
-						&polkadot_cli,
-						task_executor,
-						None,
-					).map_err(|err| format!("Relay chain argument error: {}", err))?;
+					&polkadot_cli,
+					&polkadot_cli,
+					task_executor,
+					config.telemetry_handle.clone(),
+				)
+				.map_err(|err| format!("Relay chain argument error: {}", err))?;
+
 				let collator = cli.run.base.validator || cli.collator;
 
 				info!("Parachain id: {:?}", id);
@@ -406,4 +415,12 @@ impl CliConfiguration<Self> for RelayChainCli {
 	fn announce_block(&self) -> Result<bool> {
 		self.base.base.announce_block()
 	}
+
+	fn telemetry_endpoints(
+		&self,
+		chain_spec: &Box<dyn ChainSpec>,
+	) -> Result<Option<sc_telemetry::TelemetryEndpoints>> {
+		self.base.base.telemetry_endpoints(chain_spec)
+	}
+
 }

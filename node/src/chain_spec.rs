@@ -95,17 +95,17 @@ fn mathchain_pc1_build_spec_genesis(id: ParaId) -> mathchain_runtime::GenesisCon
 	let endowed_accounts = vec![(root.clone(), 1 << 56)];
 
 	mathchain_runtime::GenesisConfig {
-		frame_system: Some(mathchain_runtime::SystemConfig {
+		frame_system: mathchain_runtime::SystemConfig {
 			code: mathchain_runtime::WASM_BINARY
 			.expect("WASM binary was not build, please build it!")
 			.to_vec(),
 			changes_trie_config: Default::default(),
-		}),
-		pallet_balances: Some(mathchain_runtime::BalancesConfig {
+		},
+		pallet_balances: mathchain_runtime::BalancesConfig {
 			balances: endowed_accounts,
-		}),
-		pallet_sudo: Some(mathchain_runtime::SudoConfig { key: root }),
-		parachain_info: Some(mathchain_runtime::ParachainInfoConfig { parachain_id: id }),
+		},
+		pallet_sudo: mathchain_runtime::SudoConfig { key: root },
+		parachain_info: mathchain_runtime::ParachainInfoConfig { parachain_id: id },
 	}
 }
 
@@ -183,20 +183,20 @@ fn testnet_genesis(
 	id: ParaId,
 ) -> mathchain_runtime::GenesisConfig {
 	mathchain_runtime::GenesisConfig {
-		frame_system: Some(mathchain_runtime::SystemConfig {
+		frame_system: mathchain_runtime::SystemConfig {
 			code: mathchain_runtime::WASM_BINARY
 				.expect("WASM binary was not build, please build it!")
 				.to_vec(),
 			changes_trie_config: Default::default(),
-		}),
-		pallet_balances: Some(mathchain_runtime::BalancesConfig {
+		},
+		pallet_balances: mathchain_runtime::BalancesConfig {
 			balances: endowed_accounts
 				.iter()
 				.cloned()
 				.map(|k| (k, 1 << 60))
 				.collect(),
-		}),
-		pallet_sudo: Some(mathchain_runtime::SudoConfig { key: root_key }),
-		parachain_info: Some(mathchain_runtime::ParachainInfoConfig { parachain_id: id }),
+		},
+		pallet_sudo: mathchain_runtime::SudoConfig { key: root_key },
+		parachain_info: mathchain_runtime::ParachainInfoConfig { parachain_id: id },
 	}
 }
